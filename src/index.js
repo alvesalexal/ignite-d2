@@ -18,29 +18,54 @@ function checksExistsUserAccount(request, response, next) {
       request.user = user;
       return next();
     }
+    return response.status(404);
   }
-  return response.status(400).json({ error: "user already not exists" });
+  return response.status(404);
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
   // Complete aqui
   const { user } = request;
-  if(((user.todos.length) <=10) && (!user.pro) || (user.pro)){
+  if (((user.todos.length) <= 10) && (!user.pro) || (user.pro)) {
     return next();
   }
-  return response.status(403).json();
+  return response.status(403).send();
 }
 
 function checksTodoExists(request, response, next) {
   // Complete aqui
-  const { user } = request;
   const { username } = request.headers;
-
-  const 
+  const {id } = request.params;
+  if (username) {
+    const user = users.find((user) => user.username === username);
+    if (user) {
+      const validID = validate(id, 4);
+      if (validID) {
+        const todo = user.todos.find(todo => todo.id === id)
+        if (todo) {
+          request.user = user;
+          request.todo = todo;
+          return next();
+        }
+        return response.status(404).json({ error: "id already not exists" });
+      }
+      return response.status(400).json({ error: "Id invalid" });
+    }
+    return response.status(404).json({ error: "User not found" });
+  }
+  return response.status(403).json({ error: "user already not exists" });
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  if (id) {
+    const user = users.find((user) => user.id === id);
+    if (user) {
+      request.user = user;
+      return next();
+    }
+  }
+  return response.status(404).json({ error: "user already not exists" });
 }
 
 app.post('/users', (request, response) => {
